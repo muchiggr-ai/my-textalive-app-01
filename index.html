@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>lyrics Web App [3D]</title>
+        <link rel="icon" href="data:,">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+        <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body class="chorus-mode">
+        <div id="vr-viewport">
+            <div id="vr-stage">
+                <canvas id="spectrum-canvas"></canvas>
+
+                <div id="daw-container">
+                    <div id="chord-roll"></div>
+                </div>
+
+                <div id="song-selector-container">
+                    <select id="song-selector">
+                        <option value="https://piapro.jp/t/6W2N/20251215164617">こたえて / imie</option>
+                        <option value="https://piapro.jp/t/zoqO/20251214200738">アフター・ザ・カーテン / Rulmry</option>
+                        <option value="https://piapro.jp/t/PNpQ/20251209170719">シャッターチャンス / 夜未アガリ</option>
+                        <option value="https://piapro.jp/t/B3yJ/20251215061727">世界最後の音楽隊 / 夏山よつぎ×ど～ぱみん</option>
+                        <option value="https://piapro.jp/t/QBdL/20251215094303">トリツクロジー / 鶴三</option>
+                        <option value="https://piapro.jp/t/E2i3/20251215092113">TAKEOVER / Twinfield</option>
+                    </select>
+                </div>
+        
+                <div id="overlay">
+                    <div id="overlay-content">
+                        <p><i class="fas fa-hourglass-half"></i> Now Loading...</p>
+                    </div>
+
+                    <div id="instruction-content">
+                        <h2>HOW TO PLAY</h2>
+                        <div class="hints">
+                            <p>🖱 右クリック + ドラッグ: 視点移動</p>
+                            <p>⌨ スペースキー: パーティクル生成</p>
+                        </div>
+                        <p class="close-hint">▼ 画面をクリックして閉じる ▼</p>
+                    </div>
+                </div>
+
+                <div id="header">
+                    <div class="control-container">
+                        <button id="prev" class="disabled"><i class="fas fa-step-backward"></i></button>
+                        <button id="play" class="disabled"><i class="fas fa-play-circle"></i></button>
+                    </div>
+                    <div id="meta">
+                        <div id="artist">artist: <span>-</span></div>
+                        <div id="song">song: <span>-</span></div>
+                    </div>
+                </div>
+
+                <div id="seekbar"><div></div></div>
+
+                <div id="lyrics">
+                    <div id="text"></div>
+                    <div id="bar"></div>
+                </div>
+
+                <div id="character"></div>
+
+                <div id="effect-layer-3d" class="effect-container3d"></div>
+
+                <div id="media"></div>
+            </div>
+        </div>
+        <script type="module" src="script.js"></script>
+    </body>
+</html>

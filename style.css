@@ -1,0 +1,850 @@
+@charset "UTF-8";
+
+/* =========================================
+    1. デザイン変数定義（ここで一括管理）
+========================================= */
+:root {
+    --bg-color: #1a1a1a;
+    --spectrum-color: #eeeeee;
+    --shape-stroke-color: rgba(255, 255, 255, 0.75);
+    --color-text-lyrics: #ffffff;
+
+    --color-seekbar-bg: rgba(255, 255, 255, 0.1);
+    --color-seekbar-fill: rgba(255, 255, 255, 0.5);
+    --color-overlay-bg: rgba(0, 0, 0, 0.8);
+
+    --font-family-lyrics: 'Noto Sans JP', sans-serif;
+    --font-weight-lyrics: 100;
+    --font-size-lyrics: 2.5vw;
+
+    --duration-phrase: 0.8s;
+}
+
+/* =========================================
+    2. ベース・レイアウト設定
+========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100;300;400&display=swap');
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    color: var(--color-text-lyrics);
+    font-family: var(--font-family-lyrics);
+    font-weight: var(--font-weight-lyrics);
+    background-color: var(--bg-color);
+    perspective: 2500px;
+    perspective-origin: center center;
+    overflow: hidden;
+    overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* =========================================
+    3. アニメーション定義（Keyframes）
+========================================= */
+@keyframes phraseIn {
+    0% {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes phraseOut {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+}
+
+@keyframes nounHighlight {
+    0% {
+        color: #ffffff;
+        transform: scale(1);
+        text-shadow: none;
+    }
+    40% {
+       color: #ffafd6;
+       transform: scale(1.2);
+       text-shadow: 0 0 10px #f84bcd;
+    }
+    100% {
+       color: #ff007a;
+       transform: scale(1);
+       text-shadow: 0 0 5px #ffd1fb;
+    }
+}
+@keyframes nounHighlightChorus {
+    0% {
+        color: #e2e2e2;
+        transform: scale(1);
+        text-shadow: none;
+    }
+    40% {
+       color: #ffafd6;
+       transform: scale(1.2);
+       text-shadow: 0 0 10px #f84bcd;
+    }
+    100% {
+       color: #ff007a;
+       transform: scale(1);
+       text-shadow: 0 0 5px #c00059;
+    }
+}
+
+@keyframes SpecialNounHighlight1 {
+    0% {
+        color: #ffffff;
+        transform: scale(1);
+        text-shadow: none;
+    }
+    40% {
+       color: #94f2e8;
+       transform: scale(1.2);
+       text-shadow: 0 0 10px #00ffcc;
+    }
+    100% {
+       color: #00e7c8;
+       transform: scale(1);
+       text-shadow: 0 0 5px #94f2e8;
+    }
+}
+
+@keyframes SpecialNounHighlight2 {
+    0% {
+        color: #ffffff;
+        transform: scale(1);
+        text-shadow: none;
+    }
+    40% {
+        color: #9cff88;
+        transform: scale(1.2);
+        text-shadow: 0 0 10px #0cb000;
+    }
+    100% {
+        color: #4ae627;
+        transform: scale(1);
+        text-shadow: 0 0 5px #9cff88;
+    }
+}
+
+@keyframes SpecialNounHighlight3 {
+    0% {
+        color: #ffffff;
+        transform: scale(1);
+        text-shadow: none;
+    }
+    40% {
+        color: #ffe554;
+        transform: scale(1.2);
+        text-shadow: 0 0 10px #ffe100;
+    }
+    100% {
+        color: #ffc400;
+        transform: scale(1);
+        text-shadow: 0 0 5px #ffe554;
+    }
+}
+
+@keyframes SpecialNounGradientHighlight {
+    0% {
+        -webkit-text-fill-color: transparent;
+        transform: scale(1);
+        filter: none;
+    }
+    40% {
+        -webkit-text-fill-color: transparent;
+        transform: scale(1.2);
+        filter: drop-shadow(0 0 10px #e0e0e0);
+    }
+    100% {
+        -webkit-text-fill-color: transparent;
+        transform: scale(1);
+        filter: drop-shadow(0 0 5px #ffffff);
+    }
+}
+
+@keyframes barPulse {
+    0%, 100% { bottom: 0%; }
+    50% { bottom: calc(100% - 20px); }
+}
+
+@keyframes explode3D {
+    0% {
+        transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(0.2);
+        opacity: 1;
+    }
+    50% {
+        opacity: 1;
+        transform: translate3d(calc(var(--tx) * 0.8), calc(var(--ty) * 0.8), calc(var(--tz) * 0.8)) scale(1.2);
+    }
+    100% {
+        transform: translate3d(var(--tx), var(--ty), var(--tz)) scale(0);
+        opacity: 0;
+    }
+}
+
+@keyframes blinkHint {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+/* =========================================
+    4. 特殊ギミック（オーディオスペクトラム）
+========================================= */
+#spectrum-canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* =========================================
+    5. 歌詞表示エリア（フレーズごと中央切り替え）
+========================================= */
+#lyrics {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 10;
+    width: 90%;
+    max-width: 1200px;
+    text-align: center;
+    pointer-events: none;
+}
+
+#text {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    font-size: var(--font-size-lyrics);
+    line-height: 1.4;
+    letter-spacing: 0.05em;
+}
+
+.phrase-span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    width: 100%;
+    height: 100%;
+    text-shadow: 0 10px 20px rgba(0, 0, 0, 0.9), 0 0 5px rgba(0, 0, 0, 0.7);
+    opacity: 0;
+}
+
+.phrase-span.active {
+    animation: phraseIn var(--duration-phrase) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.phrase-span.inactive {
+    animation: phraseOut var(--duration-phrase) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.flex-break {
+    display: block;
+    flex-basis: 100%;
+    width: 100%;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.char-span {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    margin: 0 10px;
+}
+
+.char-span::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    width: 2.2em;
+    height: 2.2em;
+    box-sizing: border-box;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.5));
+    pointer-events: none;
+}
+
+.char-span.special-noun-gradient {
+    color: #ffffff;
+    background: none;
+    -webkit-text-fill-color: #ffffff;
+}
+
+.char-span.active-char::before {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.char-span.playing.noun {
+    animation: nounHighlight 0.6s ease-out forwards;
+}
+.char-span.playing.special-noun-1 {
+    animation: SpecialNounHighlight1 0.6s ease-out forwards;
+}
+.char-span.playing.special-noun-2 {
+    animation: SpecialNounHighlight2 0.6s ease-out forwards;
+}
+.char-span.playing.special-noun-3 {
+    animation: SpecialNounHighlight3 0.6s ease-out forwards;
+}
+.char-span.playing.special-noun-gradient {
+    background: linear-gradient(to right, #00ffcc 50%, #ffe100 50%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: SpecialNounGradientHighlight 0.6s ease-out forwards;
+}
+
+
+
+/* =========================================
+    6. UI（シークバー・オーバーレイ）
+========================================= */
+#seekbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    height: 4px;
+    background-color: var(--color-seekbar-bg);
+    cursor: pointer;
+}
+
+#seekbar > div {
+    width: 0;
+    height: 100%;
+    background-color: var(--color-seekbar-fill);
+}
+
+#overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--color-overlay-bg);
+    cursor: pointer;
+    user-select: none;
+}
+
+#overlay-content p {
+    color: #ffffff;
+    font-size: 24px;
+    text-align: center;
+    opacity: 0.8;
+    pointer-events: auto;
+}
+
+#overlay.disabled {
+    display: none !important;
+}
+
+/* =========================================
+    7. 画面に見えない要素（プレイヤー本体など）
+========================================= */
+#media {
+    position: fixed;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+/* =========================================
+    8. 再生/一時停止ボタン（右上に固定）
+========================================= */
+#header {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.control-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+}
+
+#play, 
+#prev {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 32px;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+#play:hover,
+#prev:hover {
+    color: #ffffff;
+    transform: scale(1.1);
+}
+
+#play.disabled, 
+#prev.disabled {
+    display: none !important;
+}
+
+#meta {
+    z-index: 1;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    text-align: right;
+    line-height: 1.6;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+}
+
+#overlay:not(.disabled) ~ #header #meta {
+    display: none;
+}
+
+/* =========================================
+    9. サビ時の色反転設定（chorus-mode）
+========================================= */
+body.chorus-mode {
+    background-color: #f3f3f3;
+    color: #000000;
+    --shape-stroke-color: #ff7c7c;
+}
+
+body.chorus-mode #vr-viewport {
+    background: #f3f3f3;
+}
+
+body.chorus-mode #play, 
+body.chorus-mode #prev {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+body.chorus-mode #play:hover, 
+body.chorus-mode #prev:hover {
+    color: #000000;
+}
+
+body.chorus-mode #meta {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+body.chorus-mode #seekbar {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+body.chorus-mode #seekbar > div {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+body.chorus-mode #spectrum-canvas {
+    mix-blend-mode: normal;
+    opacity: 0.5;
+}
+
+body.chorus-mode #song-selector {
+    color: rgba(0, 0, 0, 0.6);
+    border-color: rgba(0, 0, 0, 0.3);
+}
+
+body.chorus-mode #song-selector:hover {
+    color: #000000;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.8);
+}
+
+body.chorus-mode #song-selector option {
+    color: #000000;
+    background-color: #ffffff;
+}
+
+body.chorus-mode #song-selector-container::after {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+body.chorus-mode #song-selector-container:hover::after {
+    color: #000000;
+}
+
+body.chorus-mode .phrase-span {
+    background: transparent;
+    text-shadow: 0 0 12px rgba(99, 99, 99, 0.8), 0 0 4px rgba(99, 99, 99, 0.6);
+}
+
+body.chorus-mode .char-span.playing.noun {
+    animation: nounHighlightChorus 0.6s ease-out forwards;
+}
+
+body.chorus-mode #spectrum-canvas {
+    mix-blend-mode: normal;
+    opacity: 0.8;
+}
+
+body.chorus-mode #daw-container::after {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+body.chorus-mode .chord-bar {
+    color: rgba(0, 0, 0, 0.6) !important;
+    background: linear-gradient(to right, #fe9fc9, #dcdcdc) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+body.chorus-mode .chord-bar::after {
+    background-color: #f86098 !important;
+    border: none !important;
+    box-shadow: 0 0 10px rgba(216, 27, 96, 0.4) !important;
+}
+
+body.chorus-mode .chord-bar.filling {
+    color: #ffffff !important;
+}
+
+
+
+/* =========================================
+    10. 曲選択セレクトボックス（左上に固定）
+========================================= */
+#song-selector-container {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    z-index: 20;
+    display: inline-block;
+}
+
+#song-selector-container::after {
+    content: "▼";
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 9px;
+    transform: translateY(-50%) rotate(0deg);
+    pointer-events: none;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+#song-selector-container:hover::after {
+    color: #ffffff;
+}
+
+#song-selector-container:has(#song-selector:open)::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+
+#song-selector {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 8px 32px 8px 12px;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: var(--font-family-lyrics);
+    font-weight: 300;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#song-selector:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+#song-selector option {
+    color: #ffffff;
+    background-color: var(--bg-color);
+}
+
+/* =========================================
+    11. 文字の後ろの図形
+========================================= */
+.char-span.shape-circle::before {
+    border: 1px solid var(--shape-stroke-color);
+    border-radius: 50%;
+}
+
+.char-span.shape-square::before {
+    border: 1px solid var(--shape-stroke-color);
+    border-radius: 15%;
+}
+
+.char-span.shape-triangle::before {
+    background-color: var(--shape-stroke-color);
+    clip-path: polygon(50% 0%, 100% 90%, 0% 90%, 50% 0%, 50% 5%, 5% 87%, 95% 87%, 50% 5%);
+}
+
+.char-span.shape-pentagon::before {
+    background-color: var(--shape-stroke-color);
+    clip-path: polygon(50% 0%, 100% 38%, 81% 100%, 19% 100%, 0% 38%, 50% 0%, 50% 3%, 5% 39%, 22% 97%, 78% 97%, 95% 39%, 50% 3%);
+}
+
+.char-span.shape-hexagon::before {
+    background-color: var(--shape-stroke-color);
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%, 25% 0%, 27% 2%, 5% 50%, 27% 97%, 73% 97%, 95% 50%, 73% 2%, 27% 2%);
+}
+
+
+@keyframes ripple-circle {
+    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+}
+.char-span.shape-circle.animated-ripple::before {
+    animation: ripple-circle 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes ripple-square {
+    0% { transform: translate(-50%, -50%) scale(0.3) rotate(-10deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.2) rotate(15deg); opacity: 0; }
+}
+.char-span.shape-square.animated-ripple::before {
+    animation: ripple-square 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes ripple-triangle {
+    0% { transform: translate(-50%, -50%) scale(0.3) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.2) rotate(15deg); opacity: 0; }
+}
+.char-span.shape-triangle.animated-ripple::before {
+    animation: ripple-triangle 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes ripple-pentagon {
+    0% { transform: translate(-50%, -50%) scale(0.3) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.2) rotate(-20deg); opacity: 0; }
+}
+.char-span.shape-pentagon.animated-ripple::before {
+    animation: ripple-pentagon 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes ripple-hexagon {
+    0% { transform: translate(-50%, -50%) scale(0.3) rotate(15deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.2) rotate(45deg); opacity: 0; }
+}
+.char-span.shape-hexagon.animated-ripple::before {
+    animation: ripple-hexagon 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+/* =========================================
+    12. DAW風コード進行エリア
+========================================= */
+#daw-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: -5;
+    width: 140vw;
+    height: 100vh;
+    overflow: visible !important;
+    transform-style: preserve-3d;
+    opacity: 0.3;
+    pointer-events: none;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+}
+
+#chord-roll {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    overflow: visible !important;
+    transform: rotateX(25deg);
+    transform-origin: center bottom;
+    transition: opacity 0.4s ease;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+}
+
+.chord-bar {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 3vh;
+    padding-left: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.2vh;
+    white-space: nowrap;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+    background: linear-gradient(90deg, rgba(150, 200, 255, 0.2), rgba(150, 200, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+.chord-bar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: calc(var(--fill-progress, 0) * 1%);
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    transition: background-color 0.1s ease;
+}
+
+.chord-bar.filling {
+    z-index: 10;
+    color: #000000;
+    text-shadow: none;
+}
+
+/* =========================================
+    13. キャラクターのアニメーション
+========================================= */
+#character, 
+.character-element {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 10;
+    opacity: 1;
+    filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.8));
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+}
+
+#character, .character-element.pulse {
+    transform: scale(1.06);
+    transition: transform 0.02s ease-out;
+}
+
+/* =========================================
+    14. 3D風グラフィック
+========================================= */
+#vr-viewport {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-color);
+    perspective: 2000px;
+    transition: background-color 0.4s ease-in-out, color 0.4s ease-in-out;
+}
+
+#vr-stage {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    transform-style: preserve-3d;
+    overflow: visible !important;
+}
+
+/* =========================================
+    15. 3D空間の光演出
+========================================= */
+.effect-container3d {
+    position: absolute;
+    display: none;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateZ(250px);
+    transform-style: preserve-3d;
+    pointer-events: none;
+    z-index: 15;
+}
+
+.spark-particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--size, 2px);
+    height: var(--size, 2px);
+    border-radius: 50%;
+    background-color: var(--spark-color);
+    box-shadow: 0 0 2px 0 var(--spark-color), 0 0 8px 3px var(--spark-color);
+    margin-top: calc(var(--size, 6px) / -2);
+    margin-left: calc(var(--size, 6px) / -2);
+    opacity: 0.6;
+    animation: explode3D var(--spark-duration, 0.8s) cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}
+
+/* =========================================
+    16. 操作ヒントUI
+========================================= */
+#instruction-content {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #ffffff;
+    background-color: rgba(20, 20, 20, 0.85);
+    padding: 50px 60px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px);
+}
+
+#instruction-content h2 {
+    font-size: 26px;
+    letter-spacing: 3px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 10px;
+}
+
+#instruction-content .hints p {
+    font-size: 16px;
+    margin: 16px 0;
+    opacity: 0.9;
+}
+
+.close-hint {
+    margin-top: 40px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    animation: blinkHint 1.5s infinite;
+}
